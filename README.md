@@ -1,3 +1,5 @@
+added my branch, pushing this to test
+
 # fitnesstrackr
 
 an API for our new fitness empire, FitnessTrac.kr, using node, express, and postgresql
