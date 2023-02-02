@@ -7,11 +7,13 @@ const client = require("./client");
 async function createUser({ username, password }) {
 
   try {
-    const { rows: user } = await client.query(`
+    const { rows: [user] } = await client.query(`
 INSERT INTO users(username, password)
 VALUES ($1, $2)
 RETURNING *;
 `, [username, password]);
+
+delete user.password;
 
     return user;
   } catch (error) {
