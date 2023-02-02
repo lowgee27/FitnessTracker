@@ -13,7 +13,7 @@ VALUES ($1, $2)
 RETURNING *;
 `, [username, password]);
 
-delete user.password;
+    delete user.password;
 
     return user;
   } catch (error) {
@@ -23,15 +23,42 @@ delete user.password;
 }
 
 async function getUser({ username, password }) {
-
+  try {
+    const { rows: [user] } = await client.query(`
+SELECT * FROM users WHERE username=$1
+`, [username]);
+    if (user.password === password) {
+      delete user.password;
+      return user;
+    }
+  } catch (error) {
+    throw error;
+  }
 }
 
 async function getUserById(userId) {
+  try {
+    const { rows: [user] } = await client.query(`
+SELECT * FROM users WHERE id=$1
+`, [userId]);
 
+    delete user.password;
+    return user;
+  } catch (error) {
+    throw error;
+  }
 }
 
 async function getUserByUsername(userName) {
+  try {
+    const { rows: [user] } = await client.query(`
+SELECT * FROM users WHERE username=$1
+`, [userName]);
 
+    return user;
+  } catch (error) {
+    throw error;
+  }
 }
 
 module.exports = {
