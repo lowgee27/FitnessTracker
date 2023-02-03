@@ -2,14 +2,17 @@ const client = require('./client');
 
 // database functions
 async function createActivity({ name, description }) {
-    try {
-      const { rows: activity } = await client.query(`
+  try {
+    const { rows: activity } = await client.query(
+      `
         INSERT INTO activities(name, description)
         VALUES($1, $2)
         RETURNING *;
-      `, [name, description]);
-  
-      return activity;
+      `,
+      [name, description]
+    );
+
+    return activity;
   } catch (error) {
     console.error('Error creating the activity.');
     throw error;
@@ -17,7 +20,16 @@ async function createActivity({ name, description }) {
 }
 
 async function getAllActivities() {
-  // select and return an array of all activities
+  try {
+    const { rows: activity } = await client.query(`
+      SELECT * FROM activities;
+    `);
+
+    return activity;
+  } catch (error) {
+    console.error('Error fetching activities.');
+    throw error;
+  }
 }
 
 async function getActivityById(id) {}
