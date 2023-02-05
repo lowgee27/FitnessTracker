@@ -48,7 +48,6 @@ async function getActivityByName(name) {
 SELECT * FROM activities WHERE name=$1
 `, [name]);
 
-
     return activity;
   } catch (error) {
     throw error;
@@ -56,7 +55,32 @@ SELECT * FROM activities WHERE name=$1
 }
 
 async function attachActivitiesToRoutines(routines) {
-  // select and return an array of all activities
+  //Similar to GetOpenReports from Phenomena, loop over routines
+  //to get activites for each routine (routine.id), add empty activities
+  //array to each routine, loop over the activities to push the 
+  //activities for each routine into the new array
+
+  try {
+
+    for (let i = 0; i < routines.length; ++i) {
+      const routine = routines[i];
+      const { rows: activities } = await client.query(`
+      SELECT activities.*, routine_activities.id AS "routineActivityId", routine_activities."routineId", routine_activities.duration, routine_activities.count
+      FROM activities 
+      JOIN routine_activities ON routine_activities."activityId" = activities.id
+      WHERE routine_activities."routineId"=$1
+    `, [routine.id]);
+
+      routine.activities = [];
+
+      for (let j = 0; j < activities.length; ++j) {
+        routine.activities.push(activities[j])
+      }
+    }
+    return routines
+  } catch (error) {
+    throw error;
+  }
 }
 
 async function updateActivity({ id, ...fields }) {
