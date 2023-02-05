@@ -84,6 +84,7 @@ async function attachActivitiesToRoutines(routines) {
 }
 
 async function updateActivity({ id, ...fields }) {
+//Similar to updateUser in juicebox
 
   const setString = Object.keys(fields).map(
     (key, index) => `"${key}"=$${index + 1}`
