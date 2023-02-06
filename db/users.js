@@ -5,14 +5,12 @@ const client = require('./client');
 // user functions
 async function createUser({ username, password }) {
   try {
-    const {
-      rows: [user],
-    } = await client.query(
+    const { rows: [user] } = await client.query(
       `
       INSERT INTO users(username, password)
       VALUES($1, $2)
       RETURNING username;
-    `,
+      `,
       [username, password]
     );
 
@@ -25,31 +23,57 @@ async function createUser({ username, password }) {
 
 async function getUser({ username, password }) {
   try {
-    const {
-      rows: [user]
-    } = await client.query(
+    const { rows: [user] } = await client.query(
       `
-    SELECT * FROM users
-    WHERE username = $1`,
+      SELECT * FROM users
+      WHERE username = $1
+      `,
       [username]
     );
-    
-    if(user.password === password) {
-      return user;
-    } else {
-      console.error('Error fetching user.')
-    }
 
-    
+    if (user.password === password) {
+      delete user.password;
+      return user;
+    }
   } catch (error) {
     console.error('Error fetching user.');
     throw error;
   }
 }
 
-async function getUserById(userId) {}
+async function getUserById(userId) {
+  try {
+    const {rows:user} = await client.query(
+      `
+      SELECT * FROM users
+      WHERE id = $1
+      `,
+      [userId]
+    );
 
-async function getUserByUsername(userName) {}
+    delete user.password;
+    return user;
+  } catch (error) {
+    console.error('Error fetching by userId.');
+    throw error;
+  }
+}
+
+async function getUserByUsername(userName) {
+  try {
+    const {rows: [user]} = await client.query(`
+      SELECT * FROM users
+      WHERE username=$1
+    `,
+      [userName]
+    );
+
+    return user;
+  } catch (error) {
+    console.error('Error fetching username.');
+    throw error;
+  }
+}
 
 module.exports = {
   createUser,
