@@ -1,8 +1,9 @@
 /* eslint-disable no-useless-catch */
 const express = require("express");
 const router = express.Router();
-const { getUserByUsername, createUser } = require("../db");
+const { getUserByUsername, createUser, getUser } = require("../db");
 const jwt = require('jsonwebtoken');
+const { reset } = require("nodemon");
 const { JWT_SECRET } = process.env;
 
 // router.use((req, res, next) => {
@@ -14,7 +15,7 @@ const { JWT_SECRET } = process.env;
 
 router.post('/register', async (req, res, next) => {
       const { username, password } = req.body;
-      //console.log(req.body);
+
       try {
             const _user = await getUserByUsername(username);
 
@@ -52,7 +53,61 @@ router.post('/register', async (req, res, next) => {
 
 // POST /api/users/login
 
+router.post('/login', async (req, res, next) => {
+      const { username, password } = req.body;
+
+      try {
+            const user = await getUserByUsername(username);
+
+            if (user && user.password == password) {
+
+                  const token = jwt.sign({
+                        id: user.id,
+                        username
+                  }, process.env.JWT_SECRET, {
+                        expiresIn: '1w'
+                  });
+
+                  res.send({ user, message: "you're logged in!", token });
+            } else {
+                  next({
+                        name: 'IncorrectCredentialsError',
+                        message: 'Username or password is incorrect'
+                  });
+            }
+
+      } catch ({ name, message }) {
+            next({ name, message })
+      }
+});
+
 // GET /api/users/me
+
+router.get('/me', async (req, res, next) => {
+
+      try {
+            if (req.headers.authorization) {
+                  const usertoken = req.headers.authorization;
+                  const token = usertoken.split(' ');
+                  const decoded = jwt.verify(token[1], JWT_SECRET);
+                  console.log(decoded);
+                  res.send({
+                        id: decoded.id, username: decoded.username
+                  });
+            } else {
+                  res.status(401)
+                  res.send({
+                        error: 'GetMeError', name: '401', message: 'You must be logged in to perform this action'
+
+                  });
+            }
+
+      } catch ({ name, message }) {
+            next({ name, message })
+      }
+
+
+});
 
 // GET /api/users/:username/routines
 
