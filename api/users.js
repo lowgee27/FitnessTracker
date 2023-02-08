@@ -1,19 +1,19 @@
 /* eslint-disable no-useless-catch */
 const express = require("express");
 const router = express.Router();
+const jwt = require('jsonwebtoken');
+const { JWT_SECRET } = process.env;
 const { getUserByUsername,
       createUser,
       getPublicRoutinesByUser,
       getAllRoutinesByUser } = require("../db");
-const jwt = require('jsonwebtoken');
-const { JWT_SECRET } = process.env;
 
 
 
 // POST /api/users/register
 
 router.post('/register', async (req, res, next) => {
-//Get paramaeters needed for the route from the client
+//Get parameters needed for the route from the client
       const { username, password } = req.body;
 
       try {
