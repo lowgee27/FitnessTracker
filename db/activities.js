@@ -64,14 +64,34 @@ async function getActivityByName(name) {
   }
 }
 
+// helper function for Routine functions
 async function attachActivitiesToRoutines(routines) {
-  // select and return an array of all activities
+
 }
 
 async function updateActivity({ id, ...fields }) {
-  // don't try to update the id
-  // do update the name and description
-  // return the updated activity
+  const setString = Object.keys(fields).map((key, index) => `"${key}"=$${index + 1}`
+  ).join(', ');
+
+  if (setString.length === 0) {
+    return;
+  }
+
+  try {
+    
+    const { rows: [activity] } = await client.query(`
+      UPDATE activities
+      SET ${setString}
+      WHERE id = ${id}
+      RETURNING *;
+    `, Object.values(fields));
+
+    return activity;
+  
+  } catch (error) {
+    console.error('Error updating activity.');
+    throw error;
+  }
 }
 
 module.exports = {
