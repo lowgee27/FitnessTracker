@@ -14,8 +14,8 @@ async function dropTables() {
     await client.query(`
     DROP TABLE IF EXISTS routine_activities;
     DROP TABLE IF EXISTS routines;
-    DROP TABLE IF EXISTS activities;
     DROP TABLE IF EXISTS users;
+    DROP TABLE IF EXISTS activities;    
     `);
   } catch (error) {
     console.error('Error dropping tables!');
@@ -30,7 +30,8 @@ async function createTables() {
     await client.query(`
       CREATE TABLE users(
         id SERIAL PRIMARY KEY,
-        username VARCHAR(255) UNIQUE NOT NULL, password VARCHAR(255) NOT NULL
+        username VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL
         );
       CREATE TABLE activities(
         id SERIAL PRIMARY KEY,
@@ -39,19 +40,19 @@ async function createTables() {
       );
       CREATE TABLE routines(
         id SERIAL PRIMARY KEY,
-        "creatorId" INTEGER REFERENCES users(Id),
+        "creatorId" INTEGER REFERENCES users(id),
         "isPublic" BOOLEAN DEFAULT false,
         name VARCHAR(255) UNIQUE NOT NULL,
         goal TEXT NOT NULL
       );
       CREATE TABLE routine_activities(
-        Id SERIAL PRIMARY KEY,
-        "routineId" INTEGER REFERENCES routines(Id),
-        "activityId" INTEGER REFERENCES activities (Id),
+        id SERIAL PRIMARY KEY,
+        "routineId" INTEGER REFERENCES routines(id),
+        "activityId" INTEGER REFERENCES activities(id),
         duration INTEGER,
         count INTEGER,
         UNIQUE("routineId", "activityId")
-      );
+      )
     `);
 
     console.log('Finished creating tables.');
