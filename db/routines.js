@@ -1,4 +1,5 @@
 const client = require("./client");
+const attachActivitiesToRoutines = require("./activities");
 
 async function createRoutine({ creatorId, isPublic, name, goal }) {
   try{
@@ -15,15 +16,29 @@ async function createRoutine({ creatorId, isPublic, name, goal }) {
   }
 }
 
-async function getRoutineById(id) {}
+async function getRoutineById(id) {
+  try {
+    const { rows: [routine] } = await client.query(`
+      SELECT * FROM routines
+      WHERE id = $1
+    `,
+      [id]
+    );
+
+    return routine;
+  } catch (error) {
+    console.error('Error fetching by id.');
+    throw error;
+  }
+}
 
 async function getRoutinesWithoutActivities() {
   try{
-    const { rows: routine } = await client.query(`
+    const { rows } = await client.query(`
       SELECT * FROM routines;
     `);
 
-    return routine;
+    return rows;
   } catch (error) {
     console.error('Error fetching routines.');
     throw error;
@@ -32,28 +47,93 @@ async function getRoutinesWithoutActivities() {
 
 async function getAllRoutines() {
   try {
-    const { rows: routine } = await client.query(`
-      SELECT * FROM routines
+    const { rows: routines } = await client.query(`
+      SELECT routines.*, users.username AS "creatorName"
+      FROM routines
+      JOIN users ON routines."creatorId" = users.id
     `);
 
-    return routine;
+    return attachActivitiesToRoutines(routines);
   } catch (error) {
     console.error('Error fetching all routines.');
     throw error;
   }
 }
 
-async function getAllPublicRoutines() {}
+async function getAllPublicRoutines() {
+  try {
+    const { rows: routines } = await client.query(`
+      SELECT routines.*, users.username AS "creatorName"
+      FROM routines
+      JOIN users ON routines."creatorId" = users.id
+      WHERE "isPublic" = TRUE;
+    `);
 
-async function getAllRoutinesByUser({ username }) {}
+    return attachActivitiesToRoutines(routines);
+  } catch (error) {
+    console.error('Error fetching public routines.');
+    throw error;
+  }
+}
+
+async function getAllRoutinesByUser({ username }) {
+  try {
+    const { rows: routines } = await client.query(`
+      SELECT routines.*, users.username AS "creatorName"
+      FROM routines
+      JOIN users ON routines."creatorId" = users.id
+      WHERE "username" = $1
+    `, [username]);
+
+    return attachActivitiesToRoutines(routines);
+  } catch (error) {
+    console.error('Error fetching routines by user.');
+    throw error;
+  }
+}
 
 async function getPublicRoutinesByUser({ username }) {}
 
 async function getPublicRoutinesByActivity({ id }) {}
 
-async function updateRoutine({ id, ...fields }) {}
+async function updateRoutine({ id, ...fields }) {
+  
+  const setString = Object.keys(fields).map((key, index) => `"${key}"=$${index + 1}`).join(', ');
+  
+  if (setString.length === 0) {
+    return;
+  }
 
-async function destroyRoutine(id) {}
+  try {
+    const {rows: [routine] } = await client.query(`
+      UPDATE routines
+      SET ${setString}
+      WHERE id = ${id}
+      RETURN *;
+    `, Object.values(fields));
+
+    return routine;
+  } catch (error) {
+    console.error('Error updating routine.');
+    throw error;
+  }
+}
+
+async function destroyRoutine(id) {
+  try {
+    const {rows: routine} = await client.query(`
+      DELETE * FROM routines
+      WHERE id =$1
+      RETURNING *
+    `, [id]);
+
+    return routine;
+  } catch (error) {
+    console.error('Error deleting routine.');
+    throw error;
+  }
+
+}
 
 module.exports = {
   getRoutineById,

@@ -66,10 +66,39 @@ async function getActivityByName(name) {
 
 // helper function for Routine functions
 async function attachActivitiesToRoutines(routines) {
+  try {
+    for (let i = 0; i < routines.length; i++) {
+    const routine = routines[i]
+    
+    const { rows : activities } = await client.query(`
+    SELECT activities.*,
+    routine_activities."routineId",
+    routine_activities."activityId",
+    routine_activities.duration,
+    routine_activities.count
+    FROM activities
+    JOIN routine_activities
+    ON routine_activities."activityId" = activities.id
+    WHERE routine_activities."routineId"=$1;
+    `, [routines.id]);
 
+    routine.activities = [];
+
+    for (let j = 0; j < activities.length; j++) {
+      routine.activities.push(activities[j]);
+    }
+  }
+  
+    return routines;
+
+  } catch (error) {
+    console.error('Error attaching activities to routines.')
+    throw error;
+  }
 }
 
 async function updateActivity({ id, ...fields }) {
+  
   const setString = Object.keys(fields).map((key, index) => `"${key}"=$${index + 1}`
   ).join(', ');
 
