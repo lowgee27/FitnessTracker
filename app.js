@@ -19,12 +19,6 @@ server.use('/api', router);
 server.get('*', (req, res) => {
       res.status(404).send({ error: '404 - not found', message: 'No route found for the requested path' })
 })
-// const errorHandler404 = ((error, req, res, next) => {
-//       res.status(404)
-//       res.send( { error: '404 - not found', message: 'No route found for the requested path' } )
-
-// })
-// server.use(errorHandler404)
 
 
 module.exports = server;
