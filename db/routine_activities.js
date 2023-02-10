@@ -1,5 +1,7 @@
+/* eslint-disable no-useless-catch */
 const client = require("./client");
-const { getRoutineById } = require("./routines");
+// const { getRoutineById } = require("./routines");
+
 async function addActivityToRoutine({
   routineId,
   activityId,
@@ -7,27 +9,101 @@ async function addActivityToRoutine({
   duration,
 }) {
   try {
-    const { rows: [newActivity] } = await client.query(`
+    const { rows: [routine_activity] } = await client.query(`
     INSERT INTO routine_activities ("routineId", count, duration)
     VALUES ($1, $2, $3, $4)
     ON CONFLICT ("routineId", "activityId") DO NOTHING
     RETURNING *;
     `, [routineId, activityId, count, duration]);
-    return newActivity;
+    return routine_activity;
   } catch(error) {
     throw error;
   }
 }
 
-async function getRoutineActivityById(id) {}
+async function getRoutineActivityById(id) {
+  try {
+    const { rows: [routine] } = await client.query(`
+SELECT * FROM routine_activities WHERE id=$1
+`, [id]);
 
-async function getRoutineActivitiesByRoutine({ id }) {}
+    return routine;
+  } catch (error) {
+    throw error;
+  }
+}
 
-async function updateRoutineActivity({ id, ...fields }) {}
+async function getRoutineActivitiesByRoutine({ id }) {
+  try {
+    const { rows: routine } = await client.query(`
+SELECT * FROM routine_activities WHERE "routineId"=$1
+`, [id]);
 
-async function destroyRoutineActivity(id) {}
+    return routine;
+  } catch (error) {
+    throw error;
+  }
+}
 
-async function canEditRoutineActivity(routineActivityId, userId) {}
+async function updateRoutineActivity({ id, ...fields }) {
+  const setString = Object.keys(fields).map(
+    (key, index) => `"${key}"=$${index + 1}`
+  ).join(', ');
+
+  try {
+    if (setString.length > 0) {
+
+      const { rows: [routine] } = await client.query(`
+            UPDATE routine_activities
+            SET ${setString}
+            WHERE id=${id}
+            RETURNING *;
+            `, Object.values(fields));
+
+      return routine;
+    }
+
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function destroyRoutineActivity(id) {
+  try {
+    const { rows: [routine_activity] } = await client.query(`
+      DELETE FROM routine_activities
+      WHERE id = $1
+      RETURNING *;
+      `, [id]);
+
+    return routine_activity;
+  } catch (error) {
+    throw error;
+  }
+}
+
+async function canEditRoutineActivity(routineActivityId, userId) {
+  try {
+
+    const { rows: [routines] } = await client.query(`
+        SELECT routines."creatorId"
+        FROM routines
+        JOIN routine_activities ON routine_activities."routineId" = routines.id
+        WHERE routine_activities.id = $1
+        `, [routineActivityId]);
+    // console.log(userId);
+    // console.log(routines);
+    // console.log(routines.creatorId);
+    if (routines.creatorId === userId) {
+      return true;
+    } else {
+      return false;
+    }
+
+  } catch (error) {
+    throw error;
+  }
+}
 
 module.exports = {
   getRoutineActivityById,

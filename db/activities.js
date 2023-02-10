@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-catch */
 const client = require('./client');
 
 // database functions
@@ -16,47 +17,61 @@ async function createActivity({ name, description }) {
 
 async function getAllActivities() {
   // select and return an array of all activities
-  const { rows: activities } = await client.query(`
+  try {
+  const { rows } = await client.query(`
   SELECT * FROM activities;
   `)
-  return activities;
+  return rows;
+} catch (error) {
+  throw error;
+}
 }
 
 async function getActivityById(id) {
+  try {
+  const { rows: [activities] } = await client.query(`
+  SELECT * FROM activities
+  WHERE id = $1
+  `, [id]);
+  return activities;
+} catch (error) {
+  throw error;
+}
+}
+async function getActivityByName(name) {
+ try {
   const { rows: [activities] } = await client.query(`
   SELECT * FROM activities
   WHERE name = $1
-  `, [id]);
-  return activities;
-}
-
-async function getActivityByName(name) {
-  const { rows: activities } = await client.query(`
-  SELECT * FROM activities
-  WHERE name = $1
   `, [name]);
+
+  return activities;
+} catch (error) {
+  throw error;
+ }
 }
 
 async function attachActivitiesToRoutines(routines) {
   // select and return an array of all activities
-  const routinesToReturn = [...routines];
   try {
-    const { rows: activities } = await client.query(`
-    SELECT activities.*, routine_activities.id AS "routineActivityId", routine_activities."routineId", 
-    routine_activities.duration, routine_activities.count
-    FROM activities
-    JOIN routine_activities ON routine_activities."activityId" = activities.id;
-    `);
-    for (const routine of routinesToReturn) {
-      const activitiesToAdd = activities.filter(
-        (activity) => activity.routineId === routine.id
-      );
 
-      routine.activities = activitiesToAdd;
+    for (let i = 0; i < routines.length; ++i) {
+      const routine = routines[i];
+      const { rows: activities } = await client.query(`
+      SELECT activities.*, routine_activities.id AS "routineActivityId", routine_activities."routineId", routine_activities.duration, routine_activities.count
+      FROM activities 
+      JOIN routine_activities ON routine_activities."activityId" = activities.id
+      WHERE routine_activities."routineId"=$1
+    `, [routine.id]);
+
+      routine.activities = [];
+
+      for (let j = 0; j < activities.length; ++j) {
+        routine.activities.push(activities[j])
+      }
     }
-    return routinesToReturn;
+    return routines
   } catch (error) {
-    console.error("error attaching", error);
     throw error;
   }
 }
@@ -65,17 +80,23 @@ async function updateActivity({ id, ...fields }) {
   // don't try to update the id
   // do update the name and description
   // return the updated activity
+  const setString = Object.keys(fields).map(
+    (key, index) => `"${key}"=$${index + 1}`
+  ).join(', ');
+
   try {
-    if (fields.name)
-    await client.query(`
-    UPDATE activities
-    SET name = "${fields.name}"
-    WHERE id = ${id}
-    `);
+    if (setString.length > 0) {
 
-    const activity = await getActivityById(id);
+      const { rows: [activity] } = await client.query(`
+            UPDATE activities
+            SET ${setString}
+            WHERE id=${id}
+            RETURNING *;
+          `, Object.values(fields));
 
-    return activity;
+      return activity;
+    }
+
   } catch (error) {
     throw error;
   }
