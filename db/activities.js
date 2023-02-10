@@ -79,18 +79,17 @@ async function attachActivitiesToRoutines(routines) {
     FROM activities
     JOIN routine_activities
     ON routine_activities."activityId" = activities.id
-    WHERE routine_activities."routineId"=$1
+    WHERE routine_activities."routineId"=$1;
     `, [routine.id]);
 
     routine.activities = [];
 
-    
     for (let j = 0; j < activities.length; j++) {
       routine.activities.push(activities[j])
     }
   }
   
-    return routines
+    return routines;
 
   } catch (error) {
     console.error('Error attaching activities to routines.')
