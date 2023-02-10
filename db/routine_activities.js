@@ -91,9 +91,7 @@ async function canEditRoutineActivity(routineActivityId, userId) {
         JOIN routine_activities ON routine_activities."routineId" = routines.id
         WHERE routine_activities.id = $1
         `, [routineActivityId]);
-    // console.log(userId);
-    // console.log(routines);
-    // console.log(routines.creatorId);
+
     if (routines.creatorId === userId) {
       return true;
     } else {
