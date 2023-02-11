@@ -9,11 +9,11 @@ async function createUser({ username, password }) {
       `
       INSERT INTO users(username, password)
       VALUES($1, $2)
-      RETURNING username;
+      RETURNING id, username;
       `,
       [username, password]
     );
-
+    
     return user;
   } catch (error) {
     console.error('Error creating user!');
