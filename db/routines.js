@@ -49,16 +49,15 @@ async function getRoutinesWithoutActivities() {
 async function getAllRoutines() {
   try {
     const { rows: routines } = await client.query(`
-      SELECT routines.*, 
+      SELECT routines.*,
       users.username AS "creatorName"
       FROM routines
-      JOIN users ON routines."creatorId" = users.id
-    `);
+      JOIN users ON users.id = routines."creatorId"
+   `);
 
-    return await attachActivitiesToRoutines(routines);
+    return attachActivitiesToRoutines(routines);
   } catch (error) {
-    console.error('Error fetching all routines.');
-    throw error;
+    throw new Error('Error fetching all routines.')
   }
 }
 
@@ -71,7 +70,11 @@ async function getAllPublicRoutines() {
       WHERE "isPublic" = TRUE;
     `);
 
-    return attachActivitiesToRoutines(routines);
+    for (const routine of routines) {
+      routine.activities = await attachActivitiesToRoutines(routine)
+    }
+
+    return routines;
   } catch (error) {
     console.error('Error fetching public routines.');
     throw error;
@@ -87,7 +90,11 @@ async function getAllRoutinesByUser({ username }) {
       WHERE "username" = $1
     `, [username]);
 
-    return attachActivitiesToRoutines(routines);
+    for (const routine of routines) {
+      routine.activities = await attachActivitiesToRoutines(routine)
+    }
+
+    return routines;
   } catch (error) {
     console.error('Error fetching routines by user.');
     throw error;
