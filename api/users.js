@@ -6,9 +6,8 @@ const { JWT_SECRET } = process.env;
 const { getUserByUsername,
       createUser,
       getPublicRoutinesByUser,
-      getAllRoutinesByUser } = require("../db");
-
-
+      getAllRoutinesByUser 
+} = require("../db");
 
 // POST /api/users/register
 

@@ -6,7 +6,6 @@ const { getAllActivities,
       getPublicRoutinesByActivity,
       getActivityById,
       getActivityByName
-
 } = require("../db");
 
 // GET /api/activities/:activityId/routines
