@@ -95,7 +95,23 @@ async function destroyRoutineActivity(id) {
 }
 
 async function canEditRoutineActivity(routineActivityId, userId) {
-  try {} catch (error) {}
+  try {
+    const { rows: [routines] } = await client.query(`
+      SELECT routines."creatorId"
+      FROM routines
+      JOIN routine_activities ON routine_activities."routineId" = routines.id
+      WHERE routine_activities.id = $1
+    `, [routineActivityId]);
+
+    if (routines.creatorId === userId) {
+      return true;
+    } else {
+      return false;
+    }
+  } catch (error) {
+    console.error('Error: unable to edit routine activity.');
+    throw error;
+  }
 }
 
 module.exports = {
