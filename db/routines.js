@@ -55,7 +55,7 @@ async function getAllRoutines() {
       JOIN users ON routines."creatorId" = users.id
     `);
 
-    return attachActivitiesToRoutines(routines);
+    return await attachActivitiesToRoutines(routines);
   } catch (error) {
     console.error('Error fetching all routines.');
     throw error;
