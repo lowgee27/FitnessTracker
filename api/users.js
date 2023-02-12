@@ -118,22 +118,28 @@ router.get('/me', async (req, res, next) => {
 
 // GET /api/users/:username/routines
 router.get('/:username/routines', async (req, res, next) => {
+    const { username } = req.params;
+
     try {
-        const user = req.user;
+        const jwt = require('jsonwebtoken');
+
+        const { JWT_SECRET } = process.env;
         
-        const username = req.params.username;
+        const usertoken = req.headers.authorization;
 
-        if (username === user.username) {
-            const routines = await getAllRoutinesByUser(user);
+        const token = usertoken.split(' ');
 
+        const decoded = jwt.verify(token[1], JWT_SECRET);
+
+        if (username === decoded.username) {
+            const routines = await getAllRoutinesByUser({username});
             res.send(routines);
         } else {
-            const routines = await getPublicRoutinesByUser({ username });
-
-            res.send(routines);
+            const user = await getPublicRoutinesByUser({username});
+            res.send(user);
         }
-    } catch (error) {
-        next(error)
+    } catch ({ name, message }) {
+        next({ name, message })
     }
 })
 
