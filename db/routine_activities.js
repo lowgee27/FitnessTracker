@@ -1,4 +1,5 @@
-const client = require('./client');
+/* eslint-disable no-useless-catch */
+const client = require("./client");
 
 async function addActivityToRoutine({
   routineId,
@@ -11,10 +12,10 @@ async function addActivityToRoutine({
       rows: [routineActivity],
     } = await client.query(
       `
-      INSERT INTO "routine_activities" ("routineId", "activityId", count, duration)
-      VALUES ($1, $2, $3, $4)
-      RETURNING *;
-    `,
+        INSERT INTO "routine_activities" ("routineId", "activityId", count, duration)
+        VALUES ($1, $2, $3, $4)
+        RETURNING *;
+      `,
       [routineId, activityId, count, duration]
     );
 
@@ -90,9 +91,12 @@ async function destroyRoutineActivity(id) {
   } catch (error) {
     console.error('Error deleting routine activity.');
     throw error;
+  }
 }
 
-async function canEditRoutineActivity(routineActivityId, userId) {}
+async function canEditRoutineActivity(routineActivityId, userId) {
+  try {} catch (error) {}
+}
 
 module.exports = {
   getRoutineActivityById,
